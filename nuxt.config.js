@@ -25,6 +25,11 @@ export default {
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
+    '~plugins/axios.js',
+    '~plugins/filter.js',
+    '~plugins/dayjs.js',
+    '~plugins/utils.js',
+    { src: '~plugins/errorToast.js', ssr: false }
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
@@ -35,37 +40,77 @@ export default {
     // https://go.nuxtjs.dev/eslint
     '@nuxtjs/eslint-module',
     // https://go.nuxtjs.dev/vuetify
-    '@nuxtjs/vuetify'
+    '@nuxtjs/vuetify',
+    '@nuxtjs/composition-api/module'
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
     // https://go.nuxtjs.dev/axios
-    '@nuxtjs/axios'
+    '@nuxtjs/axios',
+    '@nuxtjs/laravel-echo',
+    '@nuxtjs/dotenv',
+    '@nuxtjs/toast'
   ],
 
-  // Axios module configuration: https://go.nuxtjs.dev/config-axios
-  axios: {
-    // Workaround to avoid enforcing hard-coded localhost:3000: https://github.com/nuxt-community/axios-module/issues/308
-    baseURL: '/'
+  echo: {
+    broadcaster: 'socket.io',
+    host: process.env.ECHO_URL
   },
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
   vuetify: {
     customVariables: ['~/assets/variables.scss'],
+    defaultAssets: {
+      font: false
+    },
+    treeShake: true,
     theme: {
-      dark: true,
+      dark: false,
       themes: {
+        light: {
+          primary: colors.blue,
+          secondary: '#304156',
+          success: colors.green,
+          danger: colors.red,
+          warning: colors.deepOrange,
+          info: colors.indigo,
+
+          dark: '#242939',
+
+          background: '#f2f3f8'
+        },
         dark: {
-          primary: colors.blue.darken2,
-          accent: colors.grey.darken3,
-          secondary: colors.amber.darken3,
-          info: colors.teal.lighten1,
-          warning: colors.amber.base,
-          error: colors.deepOrange.accent4,
-          success: colors.green.accent3
+          primary: colors.blue,
+          secondary: '#304156',
+          success: colors.green,
+          danger: colors.red,
+          warning: colors.deepOrange,
+          info: colors.indigo
         }
       }
+    }
+  },
+  toast: {
+    position: 'top-right',
+    duration: 5000
+  },
+
+  publicRuntimeConfig: {
+    axios: {
+      proxy: true
+    },
+    proxy: {
+      '/': process.env.API_URL_BROWSER
+    },
+    homeUrl: process.env.FRONTEND_URL,
+    siteTitle: process.env.TITLE,
+    fetchUrl: process.env.FETCH_URL
+  },
+
+  privateRuntimeConfig: {
+    axios: {
+      baseURL: process.env.API_URL
     }
   },
 
