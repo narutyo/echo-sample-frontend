@@ -135,7 +135,6 @@ export default defineComponent({
           observer.value.reset()
           loading.value = false
           app.$toast.success('登録しました')
-          emitReload()
         }).catch((err) => {
           app.$error_toast(err, '登録に失敗しました')
           loading.value = false
@@ -151,16 +150,11 @@ export default defineComponent({
           observer.value.reset()
           loading.value = false
           app.$toast.success('更新しました')
-          emitReload()
         }).catch((err) => {
           app.$error_toast(err, '更新に失敗しました')
           loading.value = false
         })
       }
-    }
-
-    const emitReload = () => {
-      emit('reload')
     }
 
     const close = () => {

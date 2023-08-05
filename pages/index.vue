@@ -2,9 +2,7 @@
   <v-container>
     <v-footer>
       アイデア一覧
-      <idea-form
-        @reload="getContents"
-      >
+      <idea-form>
         <template #default="slotProps">
           <v-btn
             v-bind="slotProps.attrs"
@@ -20,20 +18,11 @@
       </idea-form>
     </v-footer>
     <v-main>
-      <v-card
-        v-for="item in list"
-        :key="item.id"
-      >
-        <v-card-title>
-          <nuxt-link
-            :to="{ path: '/idea/' + item.id }"
-          >
-            {{ item.title }}
-          </nuxt-link>
-        </v-card-title>
-        <v-card-text>{{ item.body }}</v-card-text>
-        <v-card-subtitle>{{ item.updated_at|datetime_format }}</v-card-subtitle>
-      </v-card>
+      <idea-view
+        v-for="(item, index) in ideas"
+        :key="index"
+        :idea="ideas[index]"
+      />
     </v-main>
   </v-container>
 </template>
@@ -46,44 +35,44 @@ import {
   onMounted
 } from '@nuxtjs/composition-api'
 import IdeaForm from '~/components/Idea/IdeaForm.vue'
+import IdeaView from '~/components/Idea/IdeaView.vue'
 
 export default defineComponent({
   name: 'TopPage',
   components: {
-    IdeaForm
+    IdeaForm,
+    IdeaView
   },
   setup () {
-    const { app } = useContext()
-    const loading = ref(false)
-    const list = ref([])
-    const page = ref(1)
-    const limit = ref(20)
+    const { app, $config } = useContext()
+    const ideas = ref([])
 
-    const getContents = async () => {
-      loading.value = true
+    fetch($config.fetchUrl + '/storage/ideas.json')
+      .then(response => response.json())
+      .then((json) => {
+        ideas.value = json.ideas
+      })
 
-      const paramJson = {
-        'fields[]': ['id', 'title', 'body', 'updated_at'],
-        limit: limit.value,
-        offset: (page.value - 1) * limit.value
-      }
-      const ret = await app.$axios.$get('/idea?' + app.$search_params(paramJson))
-
-      list.value = ret.results
-      loading.value = false
-    }
-
-    onMounted(async () => {
-      await getContents()
+    onMounted(() => {
+      app.$echo.channel('idea-channel')
+        .listen('IdeaPostedEvent', (e) => {
+          const index = ideas.value.findIndex(item => item.id === e.item.id)
+          if (index === -1) {
+            ideas.value.unshift(e.item)
+          } else {
+            ideas.value.splice(index, 1, e.item)
+          }
+        })
+        .listen('IdeaDeletedEvent', (e) => {
+          const index = ideas.value.findIndex(item => item.id === e.item)
+          if (index !== -1) {
+            ideas.value.splice(index, 1)
+          }
+        })
     })
 
     return {
-      loading,
-      page,
-      list,
-      limit,
-
-      getContents
+      ideas
     }
   },
   head: {

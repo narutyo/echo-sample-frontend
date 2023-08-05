@@ -8,13 +8,19 @@
     transition="fade-transition"
   >
     <v-card>
+      <v-card-title>
+        <nuxt-link
+          :to="{ path: '/idea/' + currentIdea.id }"
+        >
+          {{ currentIdea.title }}
+        </nuxt-link>
+      </v-card-title>
       <!-- eslint-disable-next-line vue/no-v-html -->
-      <v-card-text><div v-html="$nl2br(currentComment.body)" /></v-card-text>
+      <v-card-text><div v-html="$nl2br(currentIdea.body)" /></v-card-text>
       <v-card-subtitle>
-        {{ currentComment.updated_at|datetime_format }}
-        <comment-form
+        {{ currentIdea.updated_at|datetime_format }}
+        <idea-form
           :idea="idea"
-          :comment="currentComment"
         >
           <template #default="slotProps">
             <v-btn
@@ -27,34 +33,16 @@
               <v-icon>mdi-pencil-box-outline</v-icon>
             </v-btn>
           </template>
-        </comment-form>
+        </idea-form>
         <v-btn
           color="danger"
           dark
           icon
-          @click="del(currentComment)"
+          @click="del(currentIdea)"
         >
           <v-icon>mdi-delete-forever</v-icon>
         </v-btn>
       </v-card-subtitle>
-      <v-card-actions>
-        <comment-form
-          :idea="idea"
-        >
-          <template #default="slotProps">
-            <v-btn
-              v-bind="slotProps.attrs"
-              class="ma-2"
-              dark
-              color="danger"
-              v-on="slotProps.on"
-            >
-              <v-icon>mdi-plus</v-icon>
-              コメント投稿
-            </v-btn>
-          </template>
-        </comment-form>
-      </v-card-actions>
     </v-card>
   </v-lazy>
 </template>
@@ -67,33 +55,29 @@ import {
   toRefs,
   watch
 } from '@nuxtjs/composition-api'
-import CommentForm from '~/components/Comment/CommentForm.vue'
+import IdeaForm from '~/components/Idea/IdeaForm.vue'
 
 export default defineComponent({
   components: {
-    CommentForm
+    IdeaForm
   },
   props: {
     idea: {
-      type: Object,
-      default: () => {}
-    },
-    comment: {
       type: Object,
       default: () => {}
     }
   },
   setup (props) {
     const { app } = useContext()
-    const { comment } = toRefs(props)
+    const { idea } = toRefs(props)
 
-    const currentComment = ref(comment.value)
+    const currentIdea = ref(idea.value)
     const shown = ref(false)
     const loading = ref(false)
 
     const del = async (item) => {
       loading.value = true
-      await app.$axios.$delete('/comment/' + item.id).then((response) => {
+      await app.$axios.$delete('/idea/' + item.id).then((response) => {
         loading.value = false
         app.$toast.success('削除しました')
       }).catch((err) => {
@@ -102,16 +86,16 @@ export default defineComponent({
       })
     }
 
-    watch(() => comment.value,
+    watch(() => idea.value,
       (to, from) => {
-        currentComment.value = to
+        currentIdea.value = to
       },
       { deep: true }
     )
 
     return {
       shown,
-      currentComment,
+      currentIdea,
 
       del
     }

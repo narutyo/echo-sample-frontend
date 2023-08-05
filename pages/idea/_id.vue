@@ -36,7 +36,7 @@ export default defineComponent({
     const idea = ref({})
     const comments = ref([])
 
-    fetch($config.fetchUrl + '/storage/' + route.value.params.id + '.json')
+    fetch($config.fetchUrl + '/storage/comment_' + route.value.params.id + '.json')
       .then(response => response.json())
       .then((json) => {
         idea.value = json.idea
@@ -51,6 +51,12 @@ export default defineComponent({
             comments.value = [...comments.value, e.item]
           } else {
             comments.value.splice(index, 1, e.item)
+          }
+        })
+        .listen('CommentDeletedEvent', (e) => {
+          const index = comments.value.findIndex(item => item.id === e.item)
+          if (index !== -1) {
+            comments.value.splice(index, 1)
           }
         })
     })
